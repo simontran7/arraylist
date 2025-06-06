@@ -1,5 +1,5 @@
 /*
- * arraylist.h - Generic ArrayList implementation for C using macros
+ * arraylist.h - Generic ArrayList in C
  * 
  * This header provides a type-safe, generic ArrayList implementation that can
  * work with any data type. It uses C preprocessor macros to generate the
