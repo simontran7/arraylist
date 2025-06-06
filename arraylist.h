@@ -253,7 +253,7 @@
  * Creates function: ArrayListError_<name> arraylist_resize_<name>(
  *     ArrayList_<name> *list, size_t new_cap)
  * 
- * Internal function used to grow or shrink the capacity of the ArrayList.
+ * Internal function used to grow the capacity of the ArrayList.
  * Uses realloc() to change the size of the data array. If realloc fails,
  * the original array remains unchanged.
  * 
