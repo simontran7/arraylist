@@ -1,6 +1,6 @@
 # arraylist
 
-Generic `ArrayList` in C
+generic `ArrayList` in C
 
 ## Installation
 
