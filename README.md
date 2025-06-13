@@ -1,3 +1,6 @@
+> [!NOTE]
+> I'll be turning this repo into a port of Meta's [`FBVector`](https://github.com/facebook/folly/blob/main/folly/docs/FBVector.md), and I'll also try to add some doxygen comments.
+
 # arraylist
 
 generic `ArrayList` in C
