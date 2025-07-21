@@ -1,6 +1,6 @@
 # arraylist
 
-Type-safe generic ArrayList in C
+type-safe generic ArrayList in C
 
 ## Example
 
