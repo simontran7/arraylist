@@ -15,13 +15,13 @@ GENERATE_ARRAYLIST(int, int)
 int main() {
     // Create a new ArrayList of ints
     ArrayList_int *list = ARRAYLIST_CREATE(int);
-    if (!list) {
+    if (list == NULL) {
         fprintf(stderr, "Failed to allocate ArrayList\n");
         return 1;
     }
 
     // Add elements to the list
-    for (int i = 1; i <= 5; ++i) {
+    for (int i = 1; i <= 5; i += 1) {
         if (ARRAYLIST_ADD_LAST(int, list, i) != SUCCESS_int) {
             fprintf(stderr, "Failed to add element %d\n", i);
             ARRAYLIST_DESTROY(int, list);
@@ -37,7 +37,7 @@ int main() {
 
     // Get and print all elements
     printf("List contents: ");
-    for (size_t i = 0; i < ARRAYLIST_LEN(int, list); ++i) {
+    for (size_t i = 0; i < ARRAYLIST_LEN(int, list); i += 1) {
         int value;
         if (ARRAYLIST_GET(int, list, i, &value) == SUCCESS_int) {
             printf("%d ", value);
