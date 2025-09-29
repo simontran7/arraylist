@@ -2,6 +2,9 @@
 
 C type-safe generic ArrayList
 
+> [!warning]
+> Several safety bugs. Not fully usable (yet).
+
 ## Usage
 
 The following is an example using the header file:
