@@ -12,9 +12,10 @@ The following is an example using the header file:
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "arraylist.h"   // adjust path if needed
+#include "arraylist.h" // Assuming it's in the same directory as `main.c`
 
-// Generate a complete ArrayList implementation specialized for int
+// Generate a complete ArrayList implementation specialized for int,
+// where the type will be `ArrayList_int`.
 GENERATE_ARRAYLIST(int, int)
 
 int main(void)
