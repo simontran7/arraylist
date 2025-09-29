@@ -1,6 +1,6 @@
 # arraylist
 
-C type-safe generic arraylist
+C type-safe generic ArrayList
 
 ## Usage
 
