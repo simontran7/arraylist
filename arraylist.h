@@ -12,7 +12,7 @@
 #define INITIAL_CAP 10
 
 /*
- * Factor by which the array capacity grows when resizing is needed.
+ * Factor by which the array capacity grows when the underlying `data` pointer is full.
  */
 #define GROWTH_FACTOR 1.5
 
@@ -22,7 +22,7 @@
 #define GENERATE_ARRAYLIST_STRUCT(name, type) \
     typedef struct ArrayList_##name           \
     {                                         \
-        size_t size;                          \
+        size_t count;                         \
         size_t cap;                           \
         type *data;                           \
     } ArrayList_##name;
@@ -53,7 +53,7 @@
             free(arraylist);                                            \
             return NULL;                                                \
         }                                                               \
-        arraylist->size = 0;                                            \
+        arraylist->count = 0;                                           \
         arraylist->cap = INITIAL_CAP;                                   \
         return arraylist;                                               \
     }
@@ -69,12 +69,12 @@
     }
 
 /*
- * Generates `size_t arraylist_size_<name>(ArrayList_<name> *arraylist)`.
+ * Generates `size_t arraylist_count_<name>(ArrayList_<name> *arraylist)`.
  */
-#define GENERATE_ARRAYLIST_SIZE(name)                         \
-    size_t arraylist_size_##name(ArrayList_##name *arraylist) \
-    {                                                         \
-        return arraylist->size;                               \
+#define GENERATE_ARRAYLIST_COUNT(name)                         \
+    size_t arraylist_count_##name(ArrayList_##name *arraylist) \
+    {                                                          \
+        return arraylist->count;                               \
     }
 
 /*
@@ -83,7 +83,7 @@
 #define GENERATE_ARRAYLIST_IS_EMPTY(name)                       \
     bool arraylist_is_empty_##name(ArrayList_##name *arraylist) \
     {                                                           \
-        return arraylist->size == 0;                            \
+        return arraylist->count == 0;                           \
     }
 
 /*
@@ -93,9 +93,9 @@
     ArrayListError_##name arraylist_get_##name(               \
         ArrayList_##name *arraylist, size_t index, type *out) \
     {                                                         \
-        if (arraylist->size == 0)                             \
+        if (arraylist->count == 0)                            \
             return EMPTY_ARRAYLIST_ERROR_##name;              \
-        if (index >= arraylist->size)                         \
+        if (index >= arraylist->count)                        \
             return INDEX_OUT_OF_BOUNDS_ERROR_##name;          \
         *out = arraylist->data[index];                        \
         return SUCCESS_##name;                                \
@@ -109,9 +109,9 @@
         ArrayList_##name *arraylist, size_t index,   \
         type new_element, type *out)                 \
     {                                                \
-        if (arraylist->size == 0)                    \
+        if (arraylist->count == 0)                   \
             return EMPTY_ARRAYLIST_ERROR_##name;     \
-        if (index >= arraylist->size)                \
+        if (index >= arraylist->count)               \
             return INDEX_OUT_OF_BOUNDS_ERROR_##name; \
         *out = arraylist->data[index];               \
         arraylist->data[index] = new_element;        \
@@ -125,7 +125,7 @@
     ArrayListError_##name arraylist_get_first_##name( \
         ArrayList_##name *arraylist, type *out)       \
     {                                                 \
-        if (arraylist->size == 0)                     \
+        if (arraylist->count == 0)                    \
             return EMPTY_ARRAYLIST_ERROR_##name;      \
         *out = arraylist->data[0];                    \
         return SUCCESS_##name;                        \
@@ -134,21 +134,21 @@
 /*
  * Generates `ArrayListError_<name> arraylist_get_last_<name>(ArrayList_<name> *arraylist, type *out)`.
  */
-#define GENERATE_ARRAYLIST_GET_LAST(name, type)      \
-    ArrayListError_##name arraylist_get_last_##name( \
-        ArrayList_##name *arraylist, type *out)      \
-    {                                                \
-        if (arraylist->size == 0)                    \
-            return EMPTY_ARRAYLIST_ERROR_##name;     \
-        *out = arraylist->data[arraylist->size - 1]; \
-        return SUCCESS_##name;                       \
+#define GENERATE_ARRAYLIST_GET_LAST(name, type)       \
+    ArrayListError_##name arraylist_get_last_##name(  \
+        ArrayList_##name *arraylist, type *out)       \
+    {                                                 \
+        if (arraylist->count == 0)                    \
+            return EMPTY_ARRAYLIST_ERROR_##name;      \
+        *out = arraylist->data[arraylist->count - 1]; \
+        return SUCCESS_##name;                        \
     }
 
 /*
- * Generates `ArrayListError_<name> arraylist_resize_<name>(ArrayList_<name> *arraylist, size_t new_cap)`.
+ * Generates `ArrayListError_<name> arraylist_grow_<name>(ArrayList_<name> *arraylist, size_t new_cap)`.
  */
-#define GENERATE_ARRAYLIST_RESIZE(name, type)                               \
-    ArrayListError_##name arraylist_resize_##name(                          \
+#define GENERATE_ARRAYLIST_GROW(name, type)                                 \
+    ArrayListError_##name arraylist_grow_##name(                            \
         ArrayList_##name *arraylist, size_t new_cap)                        \
     {                                                                       \
         type *new_array = realloc(arraylist->data, sizeof(type) * new_cap); \
@@ -166,19 +166,19 @@
     ArrayListError_##name arraylist_add_##name(                       \
         ArrayList_##name *arraylist, size_t index, type element)      \
     {                                                                 \
-        if (index > arraylist->size)                                  \
+        if (index > arraylist->count)                                 \
             return INDEX_OUT_OF_BOUNDS_ERROR_##name;                  \
-        if (arraylist->size == arraylist->cap)                        \
+        if (arraylist->count == arraylist->cap)                       \
         {                                                             \
-            ArrayListError_##name res = arraylist_resize_##name(      \
+            ArrayListError_##name res = arraylist_grow_##name(        \
                 arraylist, (size_t)(arraylist->cap * GROWTH_FACTOR)); \
             if (res != SUCCESS_##name)                                \
                 return res;                                           \
         }                                                             \
         memmove(&arraylist->data[index + 1], &arraylist->data[index], \
-                (arraylist->size - index) * sizeof(type));            \
+                (arraylist->count - index) * sizeof(type));           \
         arraylist->data[index] = element;                             \
-        arraylist->size += 1;                                         \
+        arraylist->count += 1;                                        \
         return SUCCESS_##name;                                        \
     }
 
@@ -195,11 +195,11 @@
 /*
  * Generates `ArrayListError_<name> arraylist_add_last_<name>(ArrayList_<name> *arraylist, type element)`.
  */
-#define GENERATE_ARRAYLIST_ADD_LAST(name, type)                           \
-    ArrayListError_##name arraylist_add_last_##name(                      \
-        ArrayList_##name *arraylist, type element)                        \
-    {                                                                     \
-        return arraylist_add_##name(arraylist, arraylist->size, element); \
+#define GENERATE_ARRAYLIST_ADD_LAST(name, type)                            \
+    ArrayListError_##name arraylist_add_last_##name(                       \
+        ArrayList_##name *arraylist, type element)                         \
+    {                                                                      \
+        return arraylist_add_##name(arraylist, arraylist->count, element); \
     }
 
 /*
@@ -215,11 +215,11 @@
 /*
  * Generates `ArrayListError_<name> arraylist_remove_last_<name>(ArrayList_<name> *arraylist, type *out)`.
  */
-#define GENERATE_ARRAYLIST_REMOVE_LAST(name, type)                           \
-    ArrayListError_##name arraylist_remove_last_##name(                      \
-        ArrayList_##name *arraylist, type *out)                              \
-    {                                                                        \
-        return arraylist_remove_##name(arraylist, arraylist->size - 1, out); \
+#define GENERATE_ARRAYLIST_REMOVE_LAST(name, type)                            \
+    ArrayListError_##name arraylist_remove_last_##name(                       \
+        ArrayList_##name *arraylist, type *out)                               \
+    {                                                                         \
+        return arraylist_remove_##name(arraylist, arraylist->count - 1, out); \
     }
 
 /*
@@ -229,14 +229,14 @@
     ArrayListError_##name arraylist_remove_##name(                    \
         ArrayList_##name *arraylist, size_t index, type *out)         \
     {                                                                 \
-        if (arraylist->size == 0)                                     \
+        if (arraylist->count == 0)                                    \
             return EMPTY_ARRAYLIST_ERROR_##name;                      \
-        if (index >= arraylist->size)                                 \
+        if (index >= arraylist->count)                                \
             return INDEX_OUT_OF_BOUNDS_ERROR_##name;                  \
         *out = arraylist->data[index];                                \
         memmove(&arraylist->data[index], &arraylist->data[index + 1], \
-                (arraylist->size - index - 1) * sizeof(type));        \
-        arraylist->size -= 1;                                         \
+                (arraylist->count - index - 1) * sizeof(type));       \
+        arraylist->count -= 1;                                        \
         return SUCCESS_##name;                                        \
     }
 
@@ -253,13 +253,13 @@
     GENERATE_ARRAYLIST_ERROR_ENUM(name)         \
     GENERATE_ARRAYLIST_CREATE(name, type)       \
     GENERATE_ARRAYLIST_DESTROY(name)            \
-    GENERATE_ARRAYLIST_SIZE(name)               \
+    GENERATE_ARRAYLIST_COUNT(name)              \
     GENERATE_ARRAYLIST_IS_EMPTY(name)           \
     GENERATE_ARRAYLIST_GET(name, type)          \
     GENERATE_ARRAYLIST_GET_FIRST(name, type)    \
     GENERATE_ARRAYLIST_GET_LAST(name, type)     \
     GENERATE_ARRAYLIST_SET(name, type)          \
-    GENERATE_ARRAYLIST_RESIZE(name, type)       \
+    GENERATE_ARRAYLIST_GROW(name, type)         \
     GENERATE_ARRAYLIST_ADD(name, type)          \
     GENERATE_ARRAYLIST_ADD_FIRST(name, type)    \
     GENERATE_ARRAYLIST_ADD_LAST(name, type)     \
@@ -305,7 +305,7 @@
  * Returns:
  * - Number of elements as a `size_t`.
  */
-#define ARRAYLIST_SIZE(name, arraylist) arraylist_size_##name(arraylist)
+#define ARRAYLIST_COUNT(name, arraylist) arraylist_count_##name(arraylist)
 
 /*
  * Description:
@@ -390,12 +390,12 @@
 /*
  * Description:
  * Inserts a new element at the specified index, shifting subsequent elements to the right.
- * The arraylist automatically resizes if at capacity.
+ * The arraylist automatically grows if at capacity.
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
  * - `arraylist`: Pointer to the arraylist instance.
- * - `index`: Index at which to insert the new element (0 ≤ index ≤ sizegth).
+ * - `index`: Index at which to insert the new element (0 <= index <= length).
  * - `element`: Element to insert.
  *
  * Returns:
@@ -456,7 +456,7 @@
 /*
  * Description:
  * Removes the first element of the arraylist and returns it through the output parameter.
- * Equivasizet to calling `ARRAYLIST_REMOVE(..., 0, ...)`.
+ * Equivalent to calling `ARRAYLIST_REMOVE(..., 0, ...)`.
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
@@ -472,7 +472,7 @@
 /*
  * Description:
  * Removes the last element of the arraylist and returns it through the output parameter.
- * Equivasizet to calling `ARRAYLIST_REMOVE(..., size - 1, ...)`.
+ * Equivalent to calling `ARRAYLIST_REMOVE(..., count - 1, ...)`.
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
