@@ -40,8 +40,8 @@ int main(void)
     }
 
     // Read elements
-    printf("Current elements (%zu): ", ARRAYLIST_SIZE(int, list));
-    for (size_t i = 0; i < ARRAYLIST_SIZE(int, list); i++) {
+    printf("Current elements (%zu): ", ARRAYLIST_COUNT(int, list));
+    for (size_t i = 0; i < ARRAYLIST_COUNT(int, list); ++i) {
         int val;
         if (ARRAYLIST_GET(int, list, i, &val) == SUCCESS_int) {
             printf("%d ", val);
@@ -62,8 +62,8 @@ int main(void)
     }
 
     // Print final contents
-    printf("Final list (%zu): ", ARRAYLIST_SIZE(int, list));
-    for (size_t i = 0; i < ARRAYLIST_SIZE(int, list); i++) {
+    printf("Final list (%zu): ", ARRAYLIST_COUNT(int, list));
+    for (size_t i = 0; i < ARRAYLIST_COUNT(int, list); ++i) {
         int val;
         ARRAYLIST_GET(int, list, i, &val);
         printf("%d ", val);
