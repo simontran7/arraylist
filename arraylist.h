@@ -272,7 +272,8 @@
  *
  * Macro Parameters:
  * - `name`: An suffix identifier used to distinguish different ArrayList types, where the complete struct name will be `ArrayList_<name>`.
- * - `type`: The type of the ArrayList's elements.
+ * - `type`: The type of the ArrayList's elements. If you want to create an ArrayList for a struct, you can't pass in `struct <struct name>`.
+ *           You must typedef it first then pass in to the macro the typedef alias.
  */
 #define GENERATE_ARRAYLIST(name, type)          \
     GENERATE_ARRAYLIST_STRUCT(name, type)       \
