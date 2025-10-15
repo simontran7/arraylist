@@ -2,86 +2,125 @@
 
 C type-safe generic ArrayList
 
-> [!warning]
-> Several safety bugs. Not fully usable (yet).
-
 ## Usage
-
-The following is an example using the header file:
 
 `main.c`
 
 ```c
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include "arraylist.h" // Assuming it's in the same directory as `main.c`
 
-// Generate a complete ArrayList implementation specialized for int,
-// where the type will be `ArrayList_int`.
-GENERATE_ARRAYLIST(int, int)
+// Generate an ArrayList of type `int`
+GENERATE_ARRAYLIST(Int, int)
 
-int main(void)
-{
-    // Create a new list of integers
-    ArrayList_int *list = ARRAYLIST_CREATE(int);
-    if (!list) {
-        fprintf(stderr, "Failed to allocate ArrayList<int>\n");
-        return EXIT_FAILURE;
+int main(void) {
+    // Create list
+    ArrayList_Int *list = ARRAYLIST_CREATE(Int);
+    if (list == NULL) {
+        fprintf(stderr, "Failed to create ArrayList\n");
+        return 1;
     }
 
-    // Append some numbers
-    for (int i = 1; i <= 5; i++) {
-        if (ARRAYLIST_ADD_LAST(int, list, i) != SUCCESS_int) {
-            fprintf(stderr, "Failed to add %d\n", i);
-            ARRAYLIST_DESTROY(int, list);
-            return EXIT_FAILURE;
+    // Add elements
+    for (int i = 10; i < 20; i++) {
+        if (ARRAYLIST_ADD_LAST(Int, list, i) != SUCCESS_Int) {
+            fprintf(stderr, "Failed to add element %d\n", i);
         }
     }
-
-    // Read elements
-    printf("Current elements (%zu): ", ARRAYLIST_COUNT(int, list));
-    for (size_t i = 0; i < ARRAYLIST_COUNT(int, list); ++i) {
+    printf("After adding 10 elements:\n");
+    for (size_t i = 0; i < ARRAYLIST_COUNT(Int, list); i++) {
         int val;
-        if (ARRAYLIST_GET(int, list, i, &val) == SUCCESS_int) {
-            printf("%d ", val);
-        }
-    }
-    printf("\n");
-
-    // Update an element
-    int old_val;
-    if (ARRAYLIST_SET(int, list, 2, 42, &old_val) == SUCCESS_int) {
-        printf("Replaced index 2 (old value %d) with 42\n", old_val);
+        ARRAYLIST_GET(Int, list, i, &val);
+        printf("[%zu] = %d\n", i, val);
     }
 
-    // Remove the last element
+    // Insert in the middle of the list
+    ARRAYLIST_ADD(Int, list, 2, 99);
+    printf("\nAfter inserting 99 at index 2:\n");
+    for (size_t i = 0; i < ARRAYLIST_COUNT(Int, list); i++) {
+        int val;
+        ARRAYLIST_GET(Int, list, i, &val);
+        printf("[%zu] = %d\n", i, val);
+    }
+
+    // Modify element
+    int old;
+    ARRAYLIST_SET(Int, list, 3, 1234, &old);
+    printf("\nSet index 3 to 1234 (old value was %d):\n", old);
+    for (size_t i = 0; i < ARRAYLIST_COUNT(Int, list); i++) {
+        int val;
+        ARRAYLIST_GET(Int, list, i, &val);
+        printf("[%zu] = %d\n", i, val);
+    }
+
+    // Remove element
     int removed;
-    if (ARRAYLIST_REMOVE_LAST(int, list, &removed) == SUCCESS_int) {
-        printf("Removed last element: %d\n", removed);
-    }
-
-    // Print final contents
-    printf("Final list (%zu): ", ARRAYLIST_COUNT(int, list));
-    for (size_t i = 0; i < ARRAYLIST_COUNT(int, list); ++i) {
+    ARRAYLIST_REMOVE(Int, list, 1, &removed);
+    printf("\nRemoved index 1 (value %d):\n", removed);
+    for (size_t i = 0; i < ARRAYLIST_COUNT(Int, list); i++) {
         int val;
-        ARRAYLIST_GET(int, list, i, &val);
-        printf("%d ", val);
+        ARRAYLIST_GET(Int, list, i, &val);
+        printf("[%zu] = %d\n", i, val);
     }
-    printf("\n");
 
-    // Clean up
-    ARRAYLIST_DESTROY(int, list);
+    // Destroy list
+    ARRAYLIST_DESTROY(Int, list);
+
     return EXIT_SUCCESS;
 }
 ```
 
 `STDOUT`
 
-```c
-Current elements (5): 1 2 3 4 5
-Replaced index 2 (old value 3) with 42
-Removed last element: 5
-Final list (4): 1 2 42 4
+```
+After adding 10 elements:
+[0] = 10
+[1] = 11
+[2] = 12
+[3] = 13
+[4] = 14
+[5] = 15
+[6] = 16
+[7] = 17
+[8] = 18
+[9] = 19
+
+After inserting 99 at index 2:
+[0] = 10
+[1] = 11
+[2] = 99
+[3] = 12
+[4] = 13
+[5] = 14
+[6] = 15
+[7] = 16
+[8] = 17
+[9] = 18
+[10] = 19
+
+Set index 3 to 1234 (old value was 12):
+[0] = 10
+[1] = 11
+[2] = 99
+[3] = 1234
+[4] = 13
+[5] = 14
+[6] = 15
+[7] = 16
+[8] = 17
+[9] = 18
+[10] = 19
+
+Removed index 1 (value 11):
+[0] = 10
+[1] = 99
+[2] = 1234
+[3] = 13
+[4] = 14
+[5] = 15
+[6] = 16
+[7] = 17
+[8] = 18
+[9] = 19
 ```
 
