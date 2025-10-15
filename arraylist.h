@@ -1,15 +1,14 @@
 #ifndef ARRAYLIST_H
 #define ARRAYLIST_H
-
 #include <stdbool.h>
-#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 /*
  * Initial capacity allocated when creating a new ArrayList.
  */
-#define INITIAL_CAP 10
+#define INITIAL_CAPACITY 10
 
 /*
  * Factor by which the array capacity grows when the underlying `data` pointer is full.
@@ -17,21 +16,22 @@
 #define GROWTH_FACTOR 1.5
 
 /*
- * Generate `struct ArrayList_<name>`.
+ * Generate `struct arraylist_<name>_t`.
  */
 #define GENERATE_ARRAYLIST_STRUCT(name, type) \
-    typedef struct ArrayList_##name           \
+    typedef struct arraylist_##name_t         \
     {                                         \
-        size_t count;                         \
-        size_t cap;                           \
         type *data;                           \
+        size_t count;                         \
+        size_t capacity;                      \
+        Allocator *allocator;                 \
     } ArrayList_##name;
 
 /*
- * Generates `enum ArrayListError_<name>`.
+ * Generates `enum arraylist_error_<name>_t`.
  */
 #define GENERATE_ARRAYLIST_ERROR_ENUM(name) \
-    typedef enum ArrayListError_##name{     \
+    typedef enum arraylist_error##name_t{   \
         SUCCESS_##name,                     \
         EMPTY_ARRAYLIST_ERROR_##name,       \
         INDEX_OUT_OF_BOUNDS_ERROR_##name,   \
@@ -39,22 +39,26 @@
     } ArrayListError_##name;
 
 /*
- * Generates `ArrayList_<name> *arraylist_create_<name>()`.
+ * Generates `ArrayList_<name> *arraylist_create_<name>(Allocator *allocator)`.
+ *
+ * NOTE: The passed in allocator must implement allo
  */
 #define GENERATE_ARRAYLIST_CREATE(name, type)                           \
-    ArrayList_##name *arraylist_create_##name()                         \
+    ArrayList_##name *arraylist_create_##name(Allocator *allocator)     \
     {                                                                   \
         ArrayList_##name *arraylist = malloc(sizeof(ArrayList_##name)); \
-        if (!arraylist)                                                 \
+        if (arraylist == NULL)                                          \
+        {                                                               \
             return NULL;                                                \
-        arraylist->data = malloc(sizeof(type) * INITIAL_CAP);           \
-        if (!arraylist->data)                                           \
+        }                                                               \
+        arraylist->data = malloc(sizeof(type) * INITIAL_CAPACITY);      \
+        if (arraylist->data == NULL)                                    \
         {                                                               \
             free(arraylist);                                            \
             return NULL;                                                \
         }                                                               \
         arraylist->count = 0;                                           \
-        arraylist->cap = INITIAL_CAP;                                   \
+        arraylist->capacity = INITIAL_CAPACITY;                         \
         return arraylist;                                               \
     }
 
@@ -94,9 +98,13 @@
         ArrayList_##name *arraylist, size_t index, type *out) \
     {                                                         \
         if (arraylist->count == 0)                            \
+        {                                                     \
             return EMPTY_ARRAYLIST_ERROR_##name;              \
+        }                                                     \
         if (index >= arraylist->count)                        \
+        {                                                     \
             return INDEX_OUT_OF_BOUNDS_ERROR_##name;          \
+        }                                                     \
         *out = arraylist->data[index];                        \
         return SUCCESS_##name;                                \
     }
@@ -110,9 +118,13 @@
         type new_element, type *out)                 \
     {                                                \
         if (arraylist->count == 0)                   \
+        {                                            \
             return EMPTY_ARRAYLIST_ERROR_##name;     \
+        }                                            \
         if (index >= arraylist->count)               \
+        {                                            \
             return INDEX_OUT_OF_BOUNDS_ERROR_##name; \
+        }                                            \
         *out = arraylist->data[index];               \
         arraylist->data[index] = new_element;        \
         return SUCCESS_##name;                       \
@@ -126,7 +138,9 @@
         ArrayList_##name *arraylist, type *out)       \
     {                                                 \
         if (arraylist->count == 0)                    \
+        {                                             \
             return EMPTY_ARRAYLIST_ERROR_##name;      \
+        }                                             \
         *out = arraylist->data[0];                    \
         return SUCCESS_##name;                        \
     }
@@ -139,47 +153,55 @@
         ArrayList_##name *arraylist, type *out)       \
     {                                                 \
         if (arraylist->count == 0)                    \
+        {                                             \
             return EMPTY_ARRAYLIST_ERROR_##name;      \
+        }                                             \
         *out = arraylist->data[arraylist->count - 1]; \
         return SUCCESS_##name;                        \
     }
 
 /*
- * Generates `ArrayListError_<name> arraylist_grow_<name>(ArrayList_<name> *arraylist, size_t new_cap)`.
+ * Generates `ArrayListError_<name> arraylist_grow_<name>(ArrayList_<name> *arraylist, size_t new_capacity)`.
  */
-#define GENERATE_ARRAYLIST_GROW(name, type)                                 \
-    ArrayListError_##name arraylist_grow_##name(                            \
-        ArrayList_##name *arraylist, size_t new_cap)                        \
-    {                                                                       \
-        type *new_array = realloc(arraylist->data, sizeof(type) * new_cap); \
-        if (!new_array)                                                     \
-            return MEMORY_ERROR_##name;                                     \
-        arraylist->data = new_array;                                        \
-        arraylist->cap = new_cap;                                           \
-        return SUCCESS_##name;                                              \
+#define GENERATE_ARRAYLIST_GROW(name, type)                                      \
+    ArrayListError_##name arraylist_grow_##name(                                 \
+        ArrayList_##name *arraylist, size_t new_capacity)                        \
+    {                                                                            \
+        type *new_array = realloc(arraylist->data, sizeof(type) * new_capacity); \
+        if (new_array == NULL)                                                   \
+        {                                                                        \
+            return MEMORY_ERROR_##name;                                          \
+        }                                                                        \
+        arraylist->data = new_array;                                             \
+        arraylist->capacity = new_capacity;                                      \
+        return SUCCESS_##name;                                                   \
     }
 
 /*
  * Generates `ArrayListError_<name> arraylist_add_<name>(ArrayList_<name> *arraylist, size_t index, type element)`.
  */
-#define GENERATE_ARRAYLIST_ADD(name, type)                            \
-    ArrayListError_##name arraylist_add_##name(                       \
-        ArrayList_##name *arraylist, size_t index, type element)      \
-    {                                                                 \
-        if (index > arraylist->count)                                 \
-            return INDEX_OUT_OF_BOUNDS_ERROR_##name;                  \
-        if (arraylist->count == arraylist->cap)                       \
-        {                                                             \
-            ArrayListError_##name res = arraylist_grow_##name(        \
-                arraylist, (size_t)(arraylist->cap * GROWTH_FACTOR)); \
-            if (res != SUCCESS_##name)                                \
-                return res;                                           \
-        }                                                             \
-        memmove(&arraylist->data[index + 1], &arraylist->data[index], \
-                (arraylist->count - index) * sizeof(type));           \
-        arraylist->data[index] = element;                             \
-        arraylist->count += 1;                                        \
-        return SUCCESS_##name;                                        \
+#define GENERATE_ARRAYLIST_ADD(name, type)                                 \
+    ArrayListError_##name arraylist_add_##name(                            \
+        ArrayList_##name *arraylist, size_t index, type element)           \
+    {                                                                      \
+        if (index > arraylist->count)                                      \
+        {                                                                  \
+            return INDEX_OUT_OF_BOUNDS_ERROR_##name;                       \
+        }                                                                  \
+        if (arraylist->count == arraylist->capacity)                       \
+        {                                                                  \
+            ArrayListError_##name res = arraylist_grow_##name(             \
+                arraylist, (size_t)(arraylist->capacity * GROWTH_FACTOR)); \
+            if (res != SUCCESS_##name)                                     \
+            {                                                              \
+                return res;                                                \
+            }                                                              \
+        }                                                                  \
+        memmove(&arraylist->data[index + 1], &arraylist->data[index],      \
+                (arraylist->count - index) * sizeof(type));                \
+        arraylist->data[index] = element;                                  \
+        arraylist->count += 1;                                             \
+        return SUCCESS_##name;                                             \
     }
 
 /*
@@ -230,9 +252,13 @@
         ArrayList_##name *arraylist, size_t index, type *out)         \
     {                                                                 \
         if (arraylist->count == 0)                                    \
+        {                                                             \
             return EMPTY_ARRAYLIST_ERROR_##name;                      \
+        }                                                             \
         if (index >= arraylist->count)                                \
+        {                                                             \
             return INDEX_OUT_OF_BOUNDS_ERROR_##name;                  \
+        }                                                             \
         *out = arraylist->data[index];                                \
         memmove(&arraylist->data[index], &arraylist->data[index + 1], \
                 (arraylist->count - index - 1) * sizeof(type));       \
@@ -245,7 +271,7 @@
  * Generates the full implementation of an ArrayList for a given type, including all functions and structures.
  *
  * Macro Parameters:
- * - `name`: An identifier used to distinguish different ArrayList types.
+ * - `name`: An suffix identifier used to distinguish different ArrayList types, where the complete struct name will be `ArrayList_<name>`.
  * - `type`: The type of the ArrayList's elements.
  */
 #define GENERATE_ARRAYLIST(name, type)          \
@@ -274,11 +300,12 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
+ * - `allocator`: The custom allocator used to allocate memory for the underlying data.
  *
  * Returns:
- * - A pointer to a new ArrayList instance, or NULL if allocation fails.
+ * - A pointer to a new instance of `ArrayList`, or `NULL` if allocation fails.
  */
-#define ARRAYLIST_CREATE(name) arraylist_create_##name()
+#define ARRAYLIST_CREATE(name, allocator) arraylist_create_##name(allocator)
 
 /*
  * Description:
@@ -300,7 +327,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  *
  * Returns:
  * - Number of elements as a `size_t`.
@@ -313,10 +340,10 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  *
  * Returns:
- * - `true` if the arraylist is empty.
+ * - `true` if `arraylist` is empty.
  * - `false` otherwise.
  */
 #define ARRAYLIST_IS_EMPTY(name, arraylist) arraylist_is_empty_##name(arraylist)
@@ -327,7 +354,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `index`: Zero-based index of the element to retrieve.
  * - `out`: Pointer where the retrieved element will be stored.
  *
@@ -344,7 +371,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `out`: Pointer where the retrieved element will be stored.
  *
  * Returns:
@@ -359,7 +386,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `out`: Pointer where the retrieved element will be stored.
  *
  * Returns:
@@ -375,7 +402,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `index`: Index of the element to update.
  * - `new_element`: New value to assign at the specified index.
  * - `out`: Pointer where the old value will be stored.
@@ -394,7 +421,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `index`: Index at which to insert the new element (0 <= index <= length).
  * - `element`: Element to insert.
  *
@@ -411,7 +438,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `element`: Element to insert at the beginning.
  *
  * Returns:
@@ -426,7 +453,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `element`: Element to append to the end.
  *
  * Returns:
@@ -460,7 +487,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `out`: Pointer where the removed element will be stored.
  *
  * Returns:
@@ -476,7 +503,7 @@
  *
  * Parameters:
  * - `name`: The identifier used to specialize the generated ArrayList type.
- * - `arraylist`: Pointer to the arraylist instance.
+ * - `arraylist`: Pointer to an instance of `ArrayList`.
  * - `out`: Pointer where the removed element will be stored.
  *
  * Returns:

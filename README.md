@@ -2,6 +2,8 @@
 
 C type-safe generic ArrayList
 
+This generics pattern is inspired from [FreeBSD's `<sys/tree.h>`](http://fxr.watson.org/fxr/source/sys/tree.h).
+
 > [!warning]
 > Several safety bugs. Not fully usable (yet).
 
@@ -84,3 +86,4 @@ Replaced index 2 (old value 3) with 42
 Removed last element: 5
 Final list (4): 1 2 42 4
 ```
+
