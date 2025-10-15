@@ -10,4 +10,4 @@ cd noodle/
 cp arraylist.h <your project>/
 ```
 
-See `docs.md` for the API.
+See `api.md` for the API.
