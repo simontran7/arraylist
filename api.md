@@ -40,12 +40,6 @@ Error enum containing the error codes returned by the ArrayList operations.
 
 ## `ARRAYLIST_CREATE(name)`
 
-**Signature**
-
-```c
-ArrayList_<name> *ARRAYLIST_CREATE(name);
-```
-
 **Description**
 
 Creates a new `ArrayList_<name>` with an initial capacity of 10 elements.
@@ -58,12 +52,6 @@ ArrayList_Int *list = ARRAYLIST_CREATE(Int);
 
 ## `ARRAYLIST_DESTROY(name, arraylist)`
 
-**Signature**
-
-```c
-void ARRAYLIST_DESTROY(name, ArrayList_<name> *arraylist);
-```
-
 **Description**
 
 Frees the list's internal storage and the list itself.
@@ -75,12 +63,6 @@ ARRAYLIST_DESTROY(Int, list);
 ```
 
 ## `ARRAYLIST_COUNT(name, arraylist)`
-
-**Signature**
-
-```c
-size_t ARRAYLIST_COUNT(name, ArrayList_<name> *arraylist);
-```
 
 **Description**
 
@@ -95,12 +77,6 @@ printf("Count = %zu\n", count);
 
 ## `ARRAYLIST_IS_EMPTY(name, arraylist)`
 
-**Signature**
-
-```c
-bool ARRAYLIST_IS_EMPTY(name, ArrayList_<name> *arraylist);
-```
-
 **Description**
 
 Checks whether the list is empty.
@@ -114,12 +90,6 @@ if (ARRAYLIST_IS_EMPTY(Int, list)) {
 ```
 
 ## `ARRAYLIST_GET(name, arraylist, index, out)`
-
-**Signature**
-
-```c
-ArrayListError_<name> ARRAYLIST_GET(name, ArrayList_<name> *arraylist, size_t index, type *out);
-```
 
 **Description**
 
