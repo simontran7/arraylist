@@ -8,7 +8,8 @@
 #include <string.h>
 
 /*
- * Safety: For every macro method other than `GENERATE_ARRAYLIST` and `ARRAYLIST_CREATE`, you must pass a non-null ArrayList.
+ * Safety: For every macro method other than `GENERATE_ARRAYLIST` 
+ * and `ARRAYLIST_CREATE`, you must pass a non-null ArrayList.
  */
 
 /*
