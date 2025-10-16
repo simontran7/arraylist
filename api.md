@@ -25,6 +25,19 @@ ARRAYLIST_ADD_LAST(Int, list, 42);
 ARRAYLIST_DESTROY(Int, list);
 ```
 
+## `ArrayListError_<name>`
+
+**Description**
+
+Error enum containing the error codes returned by the ArrayList operations.
+
+**Variants**
+
+- `SUCCESS_<name>`: Operation completed successfully (value is 0).
+- `EMPTY_ARRAYLIST_ERROR_<name>`: Operation failed because the ArrayList is empty.
+- `INDEX_OUT_OF_BOUNDS_ERROR_<name>`: The provided index is invalid.
+- `MEMORY_ERROR_<name>`: Memory allocation or reallocation failed.
+
 ## `ARRAYLIST_CREATE(name)`
 
 **Signature**
